@@ -1,0 +1,192 @@
+﻿
+@{
+    ViewBag.Title = "ArrayOfPersons";
+}
+
+<h2>ANGULAR LIST</h2>
+    <div ng-app="myApp">
+        <div ng-controller="PeopleController">
+           
+            <div class="modal fade" id="myModal" role="dialog">
+                <div class="modal-dialog">
+                   
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">Create person</h4>
+                        </div>
+                        <div class="modal-body">
+                            <form class="form-horizontal" role="form">
+                                <div class="form-group">
+                                    <label for="name" class="col-sm-2 control-label">Fistname</label>
+                                    <div class="col-sm-10">
+                                        <input type="text" class="form-control" id="firstName" placeholder="First name" ng-model="item.Firstname">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="age" class="col-sm-2 control-label">Lastname</label>
+                                    <div class="col-sm-10">
+                                        <input type="text" class="form-control" id="lastName" placeholder="Last name" ng-model="item.Lastname">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="age" class="col-sm-2 control-label">Socialnumber</label>
+                                    <div class="col-sm-10">
+                                        <input type="number" class="form-control" id="socialnumber" placeholder="Social number" ng-model="item.Socialnumber">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="age" class="col-sm-2 control-label">PersonCategory</label>
+                                    <div class="col-sm-10">
+                                        <input type="text" class="form-control" id="personCategory" placeholder="Person type" ng-model="item.PersonCategory">
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-default" data-dismiss="modal" ng-click="create(item)">Create</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <h3>{{message}}</h3>
+            <p>                
+                <a data-toggle="modal" data-target="#myModal" style="cursor:pointer;">Create New</a>
+                <a ng-click="save()" style="cursor:pointer;">Save List</a>
+            </p>
+
+            <p>
+                Find by name: <input type="text" name="searchString" ng-model="search.searchString" />
+                <input type="button" value="Search" ng-click="submit(search)" />
+
+                <select ng-if="view.pageCount != '1' " ng-model="search.selectedPageSize" ng-options="x for x in pageSize" ng-change="submit(search)"></select>
+
+            </p>
+            <table class="table" ng-if="view.viewResult.length > 0">
+                <tr>
+                    <th>
+                        <a ng-click="filter(1)" style="cursor:pointer;">Name</a>
+                    </th>
+                    <th>
+                        <a ng-click="filter(2)" style="cursor:pointer;">Socialnumber</a>
+                    </th>
+                    <th>
+                        <a ng-click="filter(3)" style="cursor:pointer;">PersonCategory</a>
+                    </th>
+                    <th></th>
+                </tr>
+
+                <tr ng-repeat="item in view.viewResult">
+                    <td>
+                        {{item.Firstname}} {{item.Lastname}}
+                    </td>
+                    <td>
+                        {{item.Socialnumber}}
+                    </td>
+                    <td>
+                        {{item.PersonCategory}}
+                    </td>
+                </tr>
+
+            </table>
+            <div ng-if="view.pageCount != '1' ">
+                Page {{view.pageNumber}} of {{view.pageCount}}
+                <input type="number" name="page" ng-model="search.page" /> <input type="button" value="Go to page" ng-click="submit(search)" />
+            </div>
+            <p ng-if="view.viewResult.length == 0">Sorry your search was empty</p>
+
+        </div>
+    </div>
+    <script src="~/Scripts/angular.min.js" type="text/javascript"></script>
+    <script src="~/Scripts/angular-animate.min.js" type="text/javascript"></script>
+    <script>
+        var myApp = angular.module('myApp', ['ngAnimate']);
+
+        myApp.controller('PeopleController', ['$scope', '$http', function ($scope, $http) {
+            $scope.view = {};
+            $scope.pageSize = [10, 50, 100];
+            $scope.search = {};
+            $scope.search.selectedPageSize = 10;
+            $scope.search.searchString = "";
+            $scope.selectedFilter = "";
+            
+            $http({
+                method: 'GET',
+                url: '/angular/Data'
+            }).then(function successCallback(response) {              
+                $scope.view = response.data;
+                $scope.selectedPageSize = $scope.view.pageSize;
+                console.log($scope.view);
+            }, function errorCallback(response) {             
+                alert("Unable to load data. Try again, and if the problem persists see your system administrator.");
+            });
+            $scope.submit = function (search) {
+                var params = "/?page=" + search.page + "&SearchString=" + search.searchString + "&pageSize=" + search.selectedPageSize + "&sortOrder=" + search.selectedFilter
+                $http({
+                    method: 'GET',
+                    url: '/angular/Data' + params
+                }).then(function successCallback(response) {                   
+                    $scope.view = response.data;
+                    $scope.selectedPageSize = $scope.view.pageSize;
+                    $scope.search.page = undefined;                  
+                }, function errorCallback(response) {                    
+                    alert("Unable to load data. Try again, and if the problem persists see your system administrator.");
+                });
+            };
+            $scope.filter = function (filter) {
+                if (filter == 1) {
+                    $scope.selectedFilter = $scope.selectedFilter == "" ? "name_desc" : "";
+                }
+                else if (filter == 2) {
+                    $scope.selectedFilter = $scope.selectedFilter == "Social" ? "social_desc" : "Social";
+                }
+                else if (filter == 3) {
+                    $scope.selectedFilter = $scope.selectedFilter == "Type" ? "type_desc" : "Type";
+                }
+                $scope.search.selectedFilter = $scope.selectedFilter;
+                $scope.submit($scope.search);
+            };
+            $scope.save = function () {
+                $http({
+                    method: 'POST',
+                    url: '/angular/Save'
+                }).then(function successCallback(response) {                              
+                    $scope.message = "The list have been saved";
+                }, function errorCallback(response) {                   
+                    alert("Unable to load data. Try again, and if the problem persists see your system administrator.");
+                });
+            }
+            $scope.item = {
+                Firstname: "",
+                id: 0,
+                Lastname: "",
+                PersonCategory: "",
+                Socialnumber: ""
+            }
+            $scope.create = function (item) {
+                $http({
+                    method: 'POST',
+                    url: '/angular/create',
+                    data: item,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }).then(function successCallback(response) {                   
+                    $scope.item = {
+                        Firstname: "",
+                        id: 0,
+                        Lastname: "",
+                        PersonCategory: "",
+                        Socialnumber: ""
+                    };
+                    $scope.submit($scope.search);
+                    $scope.message = "The list have been edited";
+                }, function errorCallback(response) {
+                   alert("Unable to load data. Try again, and if the problem persists see your system administrator.");
+                });
+            }      
+
+        }]);
+    </script>

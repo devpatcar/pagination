@@ -1,0 +1,103 @@
+﻿@model ArrayOfPerson.Controllers.HomeController.ViewPagination
+
+@{
+    ViewBag.Title = "ArrayOfPersons";
+}
+<style>
+
+</style>
+<h2>MVC LIST</h2>
+<h3>@ViewBag.Saved</h3>
+<p>
+    @Html.ActionLink("Create New", "Create")
+    @Html.ActionLink("Save List", "Save")
+</p>
+@using (Html.BeginForm("Index", "Home", FormMethod.Get))
+{
+    @Html.TextBox("sortOrder", (string)ViewBag.CurrentSort, new { @type = "hidden", @id = "sortOrder" })
+    <input type="hidden" name="page" id="pageHidden" />
+    <p>
+        Find by name: @Html.TextBox("SearchString", ViewBag.CurrentFilter as string, new { @id = "searchString" })
+        <input type="submit" value="Search" />
+@if (Model.pageCount != "1")
+{ 
+    <div>@Html.DropDownList("pageSize", new SelectList(ViewBag.pageSize), new { onchange = "this.form.submit()", @id = "pageSize" })</div>
+
+}
+    </p>
+}
+@if (Model.viewResult.Count() > 0)
+{
+<table class="table">
+    <tr>
+        <th>
+            @Html.ActionLink("Name", "Index", new { sortOrder = ViewBag.NameSortParm, currentFilter = ViewBag.CurrentFilter, pageSize = ViewBag.selectedPageSize, page = ViewBag.page })
+        </th>
+        <th>
+            @Html.ActionLink("Socialnumber", "Index", new { sortOrder = ViewBag.SocialSortParm, currentFilter = ViewBag.CurrentFilter, pageSize = ViewBag.selectedPageSize, page = ViewBag.page })
+        </th>
+        <th>
+            @Html.ActionLink("PersonCategory", "Index", new { sortOrder = ViewBag.TypeSortParm, currentFilter = ViewBag.CurrentFilter, pageSize = ViewBag.selectedPageSize, page = ViewBag.page })
+        </th>
+        <th></th>
+    </tr>
+
+    @foreach (var item in Model.viewResult)
+    {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Firstname) @Html.DisplayFor(modelItem => item.Lastname)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Socialnumber)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.PersonCategory)
+            </td>           
+        </tr>
+    }
+
+</table>
+<br />
+
+<div>
+     @using (Html.BeginForm("Index", "Home", FormMethod.Get))
+     {
+         if (@Model.pageCount != "1")
+         {
+            <div>Page @Model.pageNumber of @Model.pageCount</div>
+             @Html.TextBox("page", null, new { @type = "number", @id = "page" }) <input type="submit" value="Go to page" />
+         }
+
+    <input type="hidden" name="SearchString" id="searchHidden" />
+    <input type="hidden" name="pageSize" id="pageSizeHidden" />
+   
+    @Html.TextBox("sortOrder", (string)ViewBag.CurrentSort, new { @type = "hidden", @id = "sortOrder" })
+    }
+</div>
+}
+else
+{
+    <p>Sorry your search was empty</p>
+}
+
+<script src="https://code.jquery.com/jquery-3.1.1.slim.min.js"
+        integrity="sha256-/SIrNqv8h6QGKDuNoLGA4iret+kyesCkHGzVUUV0shc="
+        crossorigin="anonymous"></script>
+<script>
+    $('#page').change(function () {
+        $("#pageHidden").val($('#page').val());
+    });
+    $('#searchString').change(function () {
+        $("#searchHidden").val($('#searchString').val());
+    });
+    $('#pageSize').change(function () {
+        $("#pageSizeHidden").val($('#pageSize').val());
+    });
+    $("#pageHidden").val($('#page').val());
+
+    $("#searchHidden").val($('#searchString').val());
+
+
+    $("#pageSizeHidden").val($('#pageSize').val());
+</script>
